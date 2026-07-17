@@ -1,18 +1,18 @@
 """
-RAG-KERN  (laeuft bei jeder Nutzerfrage)
-========================================
+RAG CORE  (runs on every user question)
+=======================================
 
-Hier passiert das eigentliche "Retrieval-Augmented Generation". Ablauf, wenn
-ein Nutzer eine Frage stellt:
+This is where the actual "Retrieval-Augmented Generation" happens. Flow when a
+user asks a question:
 
-    1. RETRIEVAL  - Frage embedden und die aehnlichsten Chunks aus Chroma holen
-    2. AUGMENT    - diese Chunks als Kontext in einen Prompt packen
-    3. GENERATION - das LLM (Groq) antwortet AUSSCHLIESSLICH auf Basis des Kontexts
+    1. RETRIEVAL  - embed the question and fetch the most similar chunks from Chroma
+    2. AUGMENT    - pack those chunks as context into a prompt
+    3. GENERATION - the LLM (Groq) answers ONLY based on that context
 
-Der letzte Punkt ist der Kern der Idee: Das LLM soll nicht frei aus seinem
-Weltwissen fabulieren, sondern sich auf deine Quellen stuetzen. Das reduziert
-Halluzinationen - besonders wichtig bei Survival-Themen, wo falsche Infos
-gefaehrlich sein koennen.
+The last point is the heart of the idea: the LLM should not freely invent from
+its world knowledge but ground itself in your sources. This reduces
+hallucinations - especially important for survival topics, where wrong
+information can be dangerous.
 """
 
 import os
@@ -27,52 +27,52 @@ from llama_index.vector_stores.chroma import ChromaVectorStore
 
 from src import config
 
-# .env laden, damit GROQ_API_KEY verfuegbar ist.
+# Load .env so GROQ_API_KEY is available.
 load_dotenv()
 
-# System-Prompt: gibt dem LLM klare Leitplanken. Das "sag ehrlich, wenn du es
-# nicht weisst" ist deine wichtigste Guardrail gegen erfundene Antworten.
+# System prompt: gives the LLM clear guardrails. The "say honestly when you don't
+# know" is your most important guardrail against invented answers.
 QA_PROMPT = PromptTemplate(
-    "Du bist 'Survival101', ein sachlicher Survival-Assistent.\n"
-    "Beantworte die Frage AUSSCHLIESSLICH auf Basis des folgenden Kontexts.\n"
-    "Wenn der Kontext die Antwort nicht hergibt, sage ehrlich, dass du es auf\n"
-    "Grundlage der vorhandenen Quellen nicht beantworten kannst - erfinde nichts.\n"
-    "Weise bei sicherheitskritischen Themen (Medizin, giftige Pflanzen) darauf\n"
-    "hin, dass dies kein Ersatz fuer Fachwissen oder aerztliche Hilfe ist.\n\n"
-    "--- KONTEXT ---\n{context_str}\n--- ENDE KONTEXT ---\n\n"
-    "Frage: {query_str}\n"
-    "Antwort (auf Deutsch):"
+    "You are 'Survival101', a factual survival assistant.\n"
+    "Answer the question ONLY based on the following context.\n"
+    "If the context does not contain the answer, honestly say that you cannot\n"
+    "answer it based on the available sources - do not make anything up.\n"
+    "For safety-critical topics (medicine, poisonous plants), point out that\n"
+    "this is not a substitute for expert knowledge or medical help.\n\n"
+    "--- CONTEXT ---\n{context_str}\n--- END CONTEXT ---\n\n"
+    "Question: {query_str}\n"
+    "Answer (in English):"
 )
 
 
 def load_query_engine():
-    """Laedt den bereits gebauten Index und haengt das LLM an.
+    """Load the already-built index and attach the LLM.
 
-    Wird von der App genau einmal aufgerufen (und dort gecached), damit nicht
-    bei jeder Frage das Modell neu geladen wird.
+    Called exactly once by the app (and cached there), so the model is not
+    reloaded on every question.
     """
     if not os.getenv("GROQ_API_KEY"):
         raise RuntimeError(
-            "GROQ_API_KEY fehlt. Lege eine .env-Datei an (Vorlage: .env.example)."
+            "GROQ_API_KEY is missing. Create a .env file (template: .env.example)."
         )
 
-    # Wichtig: dasselbe Embedding-Modell wie beim Ingest, sonst passen die
-    # Vektoren nicht zusammen und das Retrieval liefert Unsinn.
+    # Important: the same embedding model as during ingest, otherwise the
+    # vectors don't match and retrieval returns nonsense.
     embed_model = HuggingFaceEmbedding(model_name=config.EMBED_MODEL)
     llm = Groq(model=config.LLM_MODEL)
 
-    # Bestehende Chroma-Collection oeffnen (NICHT neu bauen).
+    # Open the existing Chroma collection (do NOT rebuild it).
     chroma_client = chromadb.PersistentClient(path=str(config.STORAGE_DIR))
     chroma_collection = chroma_client.get_or_create_collection(config.COLLECTION_NAME)
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
 
-    # Index aus dem vorhandenen Vektor-Store rekonstruieren.
+    # Reconstruct the index from the existing vector store.
     index = VectorStoreIndex.from_vector_store(
         vector_store=vector_store,
         embed_model=embed_model,
     )
 
-    # Der Query-Engine verbindet Retrieval (top_k Chunks) + Prompt + LLM.
+    # The query engine wires up retrieval (top_k chunks) + prompt + LLM.
     return index.as_query_engine(
         llm=llm,
         similarity_top_k=config.TOP_K,
@@ -81,13 +81,13 @@ def load_query_engine():
 
 
 if __name__ == "__main__":
-    # Kleiner Selbsttest von der Kommandozeile: python -m src.query
+    # Small self-test from the command line: python -m src.query
     engine = load_query_engine()
-    frage = "Wie mache ich Wasser aus einem Bach trinkbar?"
-    print(f"Frage: {frage}\n")
-    antwort = engine.query(frage)
-    print(f"Antwort:\n{antwort}\n")
-    print("Verwendete Quellen-Chunks:")
-    for node in antwort.source_nodes:
-        quelle = node.metadata.get("file_name", "unbekannt")
-        print(f"  - {quelle} (Score: {node.score:.3f})")
+    question = "How do I make water from a stream safe to drink?"
+    print(f"Question: {question}\n")
+    answer = engine.query(question)
+    print(f"Answer:\n{answer}\n")
+    print("Source chunks used:")
+    for node in answer.source_nodes:
+        source = node.metadata.get("file_name", "unknown")
+        print(f"  - {source} (score: {node.score:.3f})")

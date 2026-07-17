@@ -1,18 +1,18 @@
-# --- RAG-Framework (roter Faden des Projekts) ---
+# --- RAG framework ---
 llama-index-core
 
-# --- Lokale Embeddings (laufen gratis auf deiner CPU) ---
+# --- Local embeddings (run for free on your CPU) ---
 llama-index-embeddings-huggingface
 
-# --- Vektor-Datenbank (lokal, keine Cloud) ---
+# --- Vector database (local, no cloud) ---
 llama-index-vector-stores-chroma
 chromadb
 
-# --- LLM fuer die Antwortgenerierung (Groq Free-Tier) ---
+# --- LLM for answer generation (Groq free tier) ---
 llama-index-llms-groq
 
-# --- Chat-Oberflaeche ---
+# --- Chat UI ---
 streamlit
 
-# --- Hilfsmittel ---
+# --- Loads the API key from the .env file (used in src/query.py) ---
 python-dotenv

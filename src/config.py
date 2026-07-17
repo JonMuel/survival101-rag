@@ -1,39 +1,39 @@
 """
-Zentrale Konfiguration.
+Central configuration.
 
-Alle "Stellschrauben" des RAG-Systems an einem Ort. Wenn du beim Lernen
-experimentierst (anderes Embedding-Modell, groessere Chunks, anderes LLM),
-aenderst du es hier - und nicht verstreut im Code.
+All the "knobs" of the RAG system in one place. When you experiment while
+learning (different embedding model, larger chunks, different LLM), you change
+it here - not scattered across the code.
 """
 
 from pathlib import Path
 
-# --- Pfade ---------------------------------------------------------------
-# PROJECT_ROOT zeigt auf den survival101-rag-Ordner (eine Ebene ueber /src).
+# --- Paths ---------------------------------------------------------------
+# PROJECT_ROOT points at the survival101-rag folder (one level above /src).
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_DIR = PROJECT_ROOT / "data" / "raw"      # hier liegen die Quelldokumente
-STORAGE_DIR = PROJECT_ROOT / "storage"        # hierhin schreibt ingest.py den Index
+DATA_DIR = PROJECT_ROOT / "data" / "raw"      # source documents live here
+STORAGE_DIR = PROJECT_ROOT / "storage"        # ingest.py writes the index here
 
-# Name der Chroma-Collection (eine Datenbank kann mehrere Collections halten).
+# Name of the Chroma collection (one database can hold multiple collections).
 COLLECTION_NAME = "survival101"
 
 # --- Embeddings ----------------------------------------------------------
-# Kleines, mehrsprachiges Modell - laeuft lokal auf der CPU, kostet nichts.
-# Beim ersten Start wird es einmalig heruntergeladen (~120 MB).
+# Small, multilingual model - runs locally on the CPU, costs nothing.
+# On first run it is downloaded once (~120 MB).
 EMBED_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 # --- Chunking ------------------------------------------------------------
-# Wie gross ist ein Textstueck (in Tokens) und wie stark ueberlappen sie?
-# Ueberlappung sorgt dafuer, dass ein Gedanke nicht ungluecklich an einer
-# Chunk-Grenze zerrissen wird. Gute erste Werte zum Experimentieren:
+# How large is a text piece (in tokens) and how much do pieces overlap?
+# Overlap makes sure a thought is not unluckily cut in half at a chunk
+# boundary. Good starting values to experiment with:
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 64
 
 # --- Retrieval -----------------------------------------------------------
-# Wie viele der aehnlichsten Chunks holen wir als Kontext fuer das LLM?
+# How many of the most similar chunks do we fetch as context for the LLM?
 TOP_K = 4
 
-# --- LLM (Groq Free-Tier) ------------------------------------------------
-# Hinweis: Modellnamen bei Groq aendern sich gelegentlich. Falls ein Aufruf
-# fehlschlaegt, aktuelle Namen unter https://console.groq.com/docs/models pruefen.
+# --- LLM (Groq free tier) ------------------------------------------------
+# Note: Groq model names change occasionally. If a call fails, check the
+# current names at https://console.groq.com/docs/models
 LLM_MODEL = "llama-3.3-70b-versatile"

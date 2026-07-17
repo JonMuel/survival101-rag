@@ -1,4 +1,4 @@
-# Secrets - NIEMALS committen!
+# Secrets - NEVER commit!
 .env
 
 # Python
@@ -8,8 +8,8 @@ __pycache__/
 venv/
 env/
 
-# Persistenter Chroma-Index wird lokal erzeugt (via ingest.py) und nicht versioniert.
-# Fuer das Deployment kannst du diese Regel entfernen, um den fertigen Index mitzupushen.
+# The persistent Chroma index is built locally (via ingest.py) and not versioned.
+# For deployment you can remove this rule to push the finished index along.
 storage/
 !storage/.gitkeep
 

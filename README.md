@@ -1,95 +1,95 @@
-# 🏕️ Survival101 – ein RAG-Lernprojekt
+# Survival101 – a RAG learning project
 
-Ein Retrieval-Augmented-Generation-Chatbot, der Fragen rund ums Thema Survival
-ausschließlich auf Basis einer kuratierten, quellenrechtlich sauberen
-Wissensbasis beantwortet. Gebaut, um RAG-Systeme von Grund auf zu verstehen.
+A Retrieval-Augmented-Generation chatbot that answers survival questions purely
+from a curated, copyright-clean knowledge base. Built to understand RAG systems
+from the ground up.
 
-## Was ist RAG (in einem Satz)?
+## What is RAG (in one sentence)?
 
-Statt ein Sprachmodell frei aus seinem Gedächtnis antworten zu lassen, **suchen**
-wir zuerst die relevantesten Textstellen aus eigenen Dokumenten heraus und geben
-sie dem Modell als Kontext mit – so antwortet es belegbar und halluziniert weniger.
+Instead of letting a language model answer freely from its memory, we first
+**search** the most relevant passages from our own documents and hand them to the
+model as context – so it answers with evidence and hallucinates less.
 
-## Architektur
+## Architecture
 
-Das Projekt trennt bewusst zwei Phasen – das ist das wichtigste Designprinzip
-und zugleich die Voraussetzung fürs spätere Deployment:
+The project deliberately separates two phases – this is the most important design
+principle and, at the same time, the prerequisite for later deployment:
 
 ```
-  OFFLINE (einmalig, wenn sich Dokumente ändern)      LAUFEND (bei jeder Frage)
+  OFFLINE (once, when documents change)               LIVE (on every question)
   ┌─────────────────────────────────────┐             ┌──────────────────────────┐
-  │ src/ingest.py                        │             │ app.py  (Streamlit-Chat) │
-  │  1. Laden   (data/raw/*)             │             │        │                 │
-  │  2. Chunking                         │             │        ▼                 │
-  │  3. Embedding (lokal, gratis)        │  ──────►    │ src/query.py             │
-  │  4. Speichern → storage/ (Chroma)    │   Index     │  Retrieval + LLM (Groq)  │
+  │ src/ingest.py                        │             │ app.py  (Streamlit chat) │
+  │  1. Load    (data/raw/*)             │             │        │                 │
+  │  2. Chunk                            │             │        ▼                 │
+  │  3. Embed   (local, free)            │  ──────►    │ src/query.py             │
+  │  4. Store   → storage/ (Chroma)      │   Index     │  Retrieval + LLM (Groq)  │
   └─────────────────────────────────────┘             └──────────────────────────┘
 ```
 
-| Baustein     | Technologie                          | Kosten |
-|--------------|--------------------------------------|--------|
-| Framework    | LlamaIndex                           | gratis |
-| Embeddings   | sentence-transformers (lokal, CPU)   | gratis |
-| Vektor-Store | Chroma (lokal)                       | gratis |
-| LLM          | Groq Free-Tier (Llama)               | gratis |
-| Oberfläche   | Streamlit                            | gratis |
+| Building block | Technology                         | Cost |
+|----------------|------------------------------------|------|
+| Framework      | LlamaIndex                         | free |
+| Embeddings     | sentence-transformers (local, CPU) | free |
+| Vector store   | Chroma (local)                     | free |
+| LLM            | Groq free tier (Llama)             | free |
+| UI             | Streamlit                          | free |
 
-## Projektstruktur
+## Project structure
 
 ```
 survival101-rag/
-├── app.py               # Streamlit-Chat (Oberfläche)
-├── requirements.txt     # Python-Abhängigkeiten
-├── .env.example         # Vorlage für den API-Key (echte .env bleibt geheim)
-├── data/raw/            # Quelldokumente (PDF, Markdown, HTML ...)
+├── app.py               # Streamlit chat (UI)
+├── requirements.txt     # Python dependencies
+├── .env.example         # template for the API key (the real .env stays secret)
+├── data/raw/            # source documents (PDF, Markdown, HTML ...)
 ├── src/
-│   ├── config.py        # zentrale Stellschrauben
-│   ├── ingest.py        # Index bauen (offline)
-│   └── query.py         # RAG-Kern (Retrieval + Generation)
-└── storage/             # erzeugter Chroma-Index (lokal, nicht im Git)
+│   ├── config.py        # central settings
+│   ├── ingest.py        # build the index (offline)
+│   └── query.py         # RAG core (retrieval + generation)
+└── storage/             # generated Chroma index (local, not in Git)
 ```
 
 ## Setup (Windows / VS Code)
 
 ```powershell
-# 1. Virtuelle Umgebung anlegen und aktivieren
+# 1. Create and activate a virtual environment
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
-# 2. Abhängigkeiten installieren
+# 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. API-Key hinterlegen: .env.example zu .env kopieren und Groq-Key eintragen
-#    Kostenloser Key: https://console.groq.com
+# 3. Provide the API key: copy .env.example to .env and paste your Groq key
+#    Free key: https://console.groq.com
 copy .env.example .env
 
-# 4. Index bauen (liest data/raw, dauert beim ersten Mal wegen Modell-Download)
+# 4. Build the index (reads data/raw; first run is slow due to model download)
 python -m src.ingest
 
-# 5. Chat starten
+# 5. Start the chat
 streamlit run app.py
 ```
 
-## Eigene Quellen hinzufügen
+## Adding your own sources
 
-Lege weitere Dateien in `data/raw/` ab (PDF, Markdown, HTML, TXT) und führe
-`python -m src.ingest` erneut aus. Achte auf die Rechtslage: Am sichersten sind
-**gemeinfreie** Werke (z. B. das US Army Survival Manual FM 21-76), **Creative-
-Commons**-Inhalte (Lizenz beachten) oder **selbst geschriebene** Texte.
+Drop more files into `data/raw/` (PDF, Markdown, HTML, TXT) and run
+`python -m src.ingest` again. Mind the legal side: safest are **public-domain**
+works (e.g. the US Army Survival Manual FM 21-76), **Creative Commons** content
+(check the license) or **self-written** texts.
 
-## Deployment-Idee (Portfolio)
+## Deployment idea (portfolio)
 
-Zwei Links auf der Webseite: das **GitHub-Repo** (Code) und eine **Live-Demo**
-auf [Hugging Face Spaces](https://huggingface.co/spaces) (kostenloses CPU-Tier).
-Der API-Key wird dort als *Secret* hinterlegt – niemals ins Repo committen. Für
-das Deployment kann man den fertigen `storage/`-Index mitpushen (dazu die Regel
-in `.gitignore` anpassen), damit die App nicht bei jedem Start neu indexieren muss.
+Two links on your website: the **GitHub repo** (code) and a **live demo** on
+[Hugging Face Spaces](https://huggingface.co/spaces) (free CPU tier). The API key
+is stored there as a *secret* – never commit it to the repo. For deployment you
+can push the finished `storage/` index along (adjust the rule in `.gitignore`) so
+the app does not re-index on every start.
 
-## Nächste Lernschritte
+## Next learning steps
 
-- Andere Quellentypen anbinden (PDF, Webseiten) und Chunking-Effekte beobachten
-- Retrieval-Qualität bewerten (welche Chunks kommen zurück? Stimmt `TOP_K`?)
-- Voice-Interface ergänzen (Groq bietet Whisper-Speech-to-Text gratis)
+- Connect other source types (PDF, web pages) and observe chunking effects
+- Evaluate retrieval quality (which chunks come back? is `TOP_K` right?)
+- Add a voice interface (Groq offers Whisper speech-to-text for free)
 
 ---
-*Lernprojekt. Die Inhalte ersetzen keine professionelle Survival-Ausbildung.*
+*Learning project. The content is not a substitute for professional survival training.*
