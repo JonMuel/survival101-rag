@@ -1,0 +1,18 @@
+# --- RAG-Framework (roter Faden des Projekts) ---
+llama-index-core
+
+# --- Lokale Embeddings (laufen gratis auf deiner CPU) ---
+llama-index-embeddings-huggingface
+
+# --- Vektor-Datenbank (lokal, keine Cloud) ---
+llama-index-vector-stores-chroma
+chromadb
+
+# --- LLM fuer die Antwortgenerierung (Groq Free-Tier) ---
+llama-index-llms-groq
+
+# --- Chat-Oberflaeche ---
+streamlit
+
+# --- Hilfsmittel ---
+python-dotenv

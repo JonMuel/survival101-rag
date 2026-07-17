@@ -1,0 +1,19 @@
+# Secrets - NIEMALS committen!
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Persistenter Chroma-Index wird lokal erzeugt (via ingest.py) und nicht versioniert.
+# Fuer das Deployment kannst du diese Regel entfernen, um den fertigen Index mitzupushen.
+storage/
+!storage/.gitkeep
+
+# IDE / OS
+.vscode/
+.DS_Store
+Thumbs.db
